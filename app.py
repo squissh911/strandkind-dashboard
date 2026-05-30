@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, make_response, redirect, render_template, request
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -26,6 +26,15 @@ HOLIDAYS_FILE = Path(os.getenv("HOLIDAYS_FILE", TOOLS_DIR / "ferien.json"))
 PRODUCT_CACHE_FILE = Path(os.getenv("PRODUCT_CACHE_FILE", TOOLS_DIR / "sumup_product_cache.json"))
 
 app = Flask(__name__)
+app.secret_key = os.getenv('DASHBOARD_SECRET', os.urandom(24).hex())
+
+# Allowed users (email-based login)
+ALLOWED_USERS = {
+    'franz.jochen@gmail.com': 'Jochen',
+    'info@strandkind-hamburg.de': 'Strandkind',
+    'j.franz@strandkind-hamburg.de': 'Joohee',
+}
+SHARED_PASSWORD = os.getenv('DASHBOARD_PASSWORD', 'strandkind085')
 
 telegram_offsets: dict[str, int] = {}
 
@@ -118,7 +127,59 @@ def month_start(value: str) -> str:
 
 @app.get("/")
 def index() -> str:
+    if 'user' not in request.cookies:
+        return render_template("login.html")
     return render_template("index.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    from flask import make_response, redirect
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        if email in ALLOWED_USERS and password == SHARED_PASSWORD:
+            resp = make_response(redirect("/"))
+            resp.set_cookie("user", email, max_age=86400*7, httponly=True, samesite="Lax")
+            resp.set_cookie("user_name", ALLOWED_USERS[email], max_age=86400*7, httponly=True, samesite="Lax")
+            return resp
+        return render_template("login.html", error="Falsche E-Mail oder Passwort")
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    from flask import redirect
+    resp = make_response(redirect("/login"))
+    resp.set_cookie("user", "", max_age=0)
+    resp.set_cookie("user_name", "", max_age=0)
+    return resp
+
+
+@app.before_request
+def require_auth():
+    # Skip auth for login/logout/static files
+    if request.path.startswith("/static/"):
+        return
+    if request.path in ("/login", "/logout", "/"):
+        return
+    if request.path == "/api/auth/check":
+        return
+    # Require auth for all other API routes
+    if request.path.startswith("/api/"):
+        user = request.cookies.get("user", "")
+        if not user or user not in ALLOWED_USERS:
+            from flask import abort
+            abort(401)
+
+
+@app.get("/api/auth/check")
+def auth_check():
+    user = request.cookies.get("user", "")
+    name = request.cookies.get("user_name", "")
+    if user and user in ALLOWED_USERS:
+        return ok({"user": user, "name": name})
+    return unavailable("Nicht eingeloggt", status=401)
 
 
 @app.get("/api/health")
