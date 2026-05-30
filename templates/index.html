@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Strandkind Max Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <header class="app-header glass-panel">
+      <div class="brand-block">
+        <span class="brand-mark">S</span>
+        <div>
+          <p class="eyebrow">Max Intelligence</p>
+          <h1>Strandkind Hamburg</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="clock">
+          <span id="currentDate">--</span>
+          <strong id="currentTime">--:--</strong>
+        </div>
+        <button id="refreshBtn" class="primary-button" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <main class="dashboard-shell">
+      <section class="status-row">
+        <span class="status-pill" id="onlineStatus">Max wird geprueft</span>
+        <span>Letzte Aktualisierung <strong id="lastUpdated">noch nie</strong></span>
+      </section>
+
+      <nav class="tab-nav" aria-label="Dashboard Tabs">
+        <button class="tab-btn active" data-tab="start">💡 Start</button>
+        <button class="tab-btn" data-tab="morgen">🌤️ Morgen</button>
+        <button class="tab-btn" data-tab="abend">🌆 Abend</button>
+        <button class="tab-btn" data-tab="monat">💰 Monat</button>
+        <button class="tab-btn" data-tab="waren">☕ Waren</button>
+        <button class="tab-btn" data-tab="kalender">🗓️ Kalender</button>
+        <button class="tab-btn" data-tab="chat">🤖 Chat</button>
+        <button class="tab-btn" data-tab="learning">📊 Learning</button>
+        <button class="tab-btn" data-tab="wochen">📅 Wochenprog.</button>
+        <button class="tab-btn" data-tab="lieferanten">🚛 Lieferanten</button>
+        <button class="tab-btn" data-tab="team">👥 Team</button>
+      </nav>
+
+      <section id="tab-start" class="tab-content active">
+        <div class="kpi-strip">
+          <article class="kpi-card primary-kpi"><span>Heute</span><strong id="kpiTodayRevenue">--</strong><small id="kpiTodayMeta">-- Verkäufe</small></article>
+          <article class="kpi-card"><span>Monat</span><strong id="kpiMonthRevenue">--</strong><small id="kpiMonthMeta">-- / Tag</small></article>
+          <article class="kpi-card"><span>Prognose morgen</span><strong id="kpiForecast">--</strong><small>historisch x Wachstum</small></article>
+          <article class="kpi-card"><span>Learning Score</span><strong id="kpiLearning">--</strong><small>letzte Prognosen</small></article>
+        </div>
+        <div class="grid two-col">
+          <article class="card">
+            <div class="card-heading"><div><p class="eyebrow">Live Feed</p><h2>Letzte Transaktionen</h2></div></div>
+            <div id="transactionList" class="data-list"></div>
+          </article>
+          <article class="card">
+            <div class="card-heading"><div><p class="eyebrow">Next Up</p><h2>Termine & Signale</h2></div></div>
+            <div id="nextSignals" class="data-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="tab-morgen" class="tab-content">
+        <div class="grid two-col">
+          <article class="card feature-card">
+            <div class="card-heading"><div><p class="eyebrow">06:00 Briefing</p><h2>Morgenbriefing</h2></div><span id="weatherBadge" class="weather-badge">--</span></div>
+            <div class="forecast" id="morningForecast">Prognose wird geladen</div>
+            <div class="analysis-grid">
+              <div><span>Ferien HH</span><strong id="holidayHH">--</strong></div>
+              <div><span>Events heute</span><strong id="eventsToday">--</strong></div>
+              <div><span>Cabin Fever</span><strong id="cabinFever">--</strong></div>
+            </div>
+            <div class="chart-frame"><div class="mini-heading"><span>Peak Hours</span><strong>Erwarteter Umsatz</strong></div><canvas id="morningPeakChart"></canvas></div>
+          </article>
+          <article class="card">
+            <div class="card-heading"><div><p class="eyebrow">Best Match</p><h2>Zettle-Vergleich</h2></div></div>
+            <div class="best-match">
+              <div><span>Historischer Tag</span><strong id="bestMatchDay">--</strong><p id="bestMatchRevenue">--</p></div>
+              <canvas id="mixChart"></canvas>
+            </div>
+            <h3>Weitere Vergleichstage</h3>
+            <div id="comparisonDays" class="compact-list"></div>
+            <p class="error-text" id="zettleError"></p>
+          </article>
+        </div>
+      </section>
+
+      <section id="tab-abend" class="tab-content">
+        <div class="grid two-col">
+          <article class="card feature-card">
+            <div class="card-heading"><div><p class="eyebrow">20:00 Review</p><h2>Abendbriefing</h2></div><button id="csvExportBtn" class="ghost-button" type="button">CSV Export</button></div>
+            <div class="hero-number" id="eveningRevenue">--</div>
+            <p class="subtle"><span id="eveningTx">--</span> Verkäufe · Ø <span id="eveningAvg">--</span></p>
+            <div id="forecastCompare" class="verdict-card">Prognosevergleich wird geladen</div>
+            <div class="chart-frame"><div class="mini-heading"><span>Ist vs Prognose</span><strong>Abweichung</strong></div><canvas id="eveningChart"></canvas></div>
+          </article>
+          <article class="card">
+            <div class="card-heading"><div><p class="eyebrow">Operations</p><h2>Status</h2></div></div>
+            <div id="eveningOps" class="data-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="tab-monat" class="tab-content">
+        <article class="card feature-card">
+          <div class="card-heading">
+            <div><p class="eyebrow" id="monthLabel">Monat</p><h2>Monatsübersicht</h2></div>
+            <div class="control-row"><label>Monat<input id="monthPicker" type="month" /></label></div>
+          </div>
+          <div class="kpi-strip compact-kpis">
+            <article class="kpi-card"><span>Gesamt</span><strong id="monthRevenue">--</strong><small>Umsatz</small></article>
+            <article class="kpi-card"><span>Ø / Tag</span><strong id="avgDay">--</strong><small>Performance</small></article>
+            <article class="kpi-card"><span>Best</span><strong id="bestDay">--</strong><small>Top-Tag</small></article>
+            <article class="kpi-card"><span>Trinkgeld</span><strong id="monthTips">--</strong><small>Summe</small></article>
+          </div>
+          <div class="grid two-col">
+            <div class="chart-frame"><div class="mini-heading"><span>YoY Benchmark</span><strong>Monatsvergleich</strong></div><canvas id="yearCompareChart"></canvas></div>
+            <div class="chart-frame"><div class="mini-heading"><span>Monatsdynamik</span><strong>Tagesumsatz</strong></div><canvas id="dailyTrendChart"></canvas></div>
+          </div>
+          <div class="fee-box" id="feeBox">Gebühren werden geladen</div>
+          <div id="dayList" class="table-like"></div>
+        </article>
+      </section>
+
+      <section id="tab-waren" class="tab-content">
+        <article class="card feature-card">
+          <div class="card-heading"><div><p class="eyebrow">Rohstoffe</p><h2>Warenanalyse</h2></div></div>
+          <div id="materialsGrid" class="analysis-grid"></div>
+          <div class="grid two-col">
+            <div class="chart-frame"><div class="mini-heading"><span>No-Milk</span><strong>Trend</strong></div><canvas id="nomilkChart"></canvas></div>
+            <div class="inset-panel"><h3>Bestellvorschlag</h3><div id="orderRecommendations" class="data-list"></div></div>
+          </div>
+          <h3>Produktdetails</h3>
+          <div id="productRecipeTable" class="table-like"></div>
+          <p class="error-text" id="warenError"></p>
+        </article>
+      </section>
+
+      <section id="tab-kalender" class="tab-content">
+        <div class="grid two-col">
+          <article class="card"><div class="card-heading"><div><p class="eyebrow">Monatsansicht</p><h2>Kalender</h2></div></div><div id="calendarGrid" class="calendar-grid"></div></article>
+          <article class="card"><div class="card-heading"><div><p class="eyebrow">30 Tage</p><h2>Events & Termine</h2></div></div><div id="eventList" class="data-list"></div></article>
+        </div>
+      </section>
+
+      <section id="tab-chat" class="tab-content">
+        <article class="card chat-card solo">
+          <div class="card-heading"><div><p class="eyebrow">Telegram</p><h2>Chat mit Max</h2></div><span class="status-dot"><i></i> Online</span></div>
+          <div id="chatMessages" class="chat-messages"></div>
+          <form id="chatForm" class="chat-form"><input id="chatInput" type="text" placeholder="Frag mich was..." autocomplete="off" /><button type="submit" class="primary-button">Senden</button></form>
+          <p class="error-text" id="chatError"></p>
+        </article>
+      </section>
+
+      <section id="tab-learning" class="tab-content">
+        <div class="grid two-col">
+          <article class="card feature-card"><div class="card-heading"><div><p class="eyebrow">Quality</p><h2>Learning Engine</h2></div></div><div id="learningParams" class="analysis-grid"></div><div class="chart-frame"><div class="mini-heading"><span>Fehleranalyse</span><strong>Ursachen</strong></div><canvas id="learningDonut"></canvas></div></article>
+          <article class="card"><div class="card-heading"><div><p class="eyebrow">Letzte 30 Tage</p><h2>Prognose-Log</h2></div></div><div id="predictionLog" class="table-like"></div></article>
+        </div>
+      </section>
+
+      <section id="tab-wochen" class="tab-content">
+        <article class="card feature-card"><div class="card-heading"><div><p class="eyebrow">6 Tage</p><h2>Wochenprognose</h2></div><span id="weeklyTotal" class="metric-note">--</span></div><div id="weeklyList" class="weekly-list"></div><div class="chart-frame"><div class="mini-heading"><span>Di bis So</span><strong>Forecast</strong></div><canvas id="weeklyChart"></canvas></div></article>
+      </section>
+
+      <section id="tab-lieferanten" class="tab-content">
+        <article class="card feature-card"><div class="card-heading"><div><p class="eyebrow">Supply</p><h2>Lieferanten & Bestellungen</h2></div></div><div id="supplierCards" class="supplier-grid"></div></article>
+      </section>
+
+      <section id="tab-team" class="tab-content">
+        <article class="card feature-card"><div class="card-heading"><div><p class="eyebrow">Connecteam</p><h2>Team / Mitarbeiter</h2></div></div><div id="teamCards" class="team-grid"></div><h3>Geburtstage</h3><div id="birthdayList" class="data-list"></div></article>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+[Unit]
+Description=Max Strandkind Dashboard
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/.openclaw/workspace/dashboard
+Environment=OPENCLAW_TOOLS_DIR=/root/.openclaw/workspace/tools
+Environment=OPENCLAW_GROWTH_CONFIG=/root/.openclaw/workspace/tools/growth_config.json
+Environment=PORT=9090
+ExecStart=python3 /root/.openclaw/workspace/dashboard/app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

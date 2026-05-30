@@ -1,0 +1,6 @@
+*.pyc
+__pycache__/
+.venv/
+dashboard.log
+.DS_Store
+nohup.out
