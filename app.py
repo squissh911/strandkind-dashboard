@@ -30,9 +30,7 @@ app.secret_key = os.getenv('DASHBOARD_SECRET', os.urandom(24).hex())
 
 # Allowed users (email-based login)
 ALLOWED_USERS = {
-    'franz.jochen@gmail.com': 'Jochen',
     'info@strandkind-hamburg.de': 'Strandkind',
-    'j.franz@strandkind-hamburg.de': 'Joohee',
 }
 SHARED_PASSWORD = os.getenv('DASHBOARD_PASSWORD', 'strandkind085')
 
